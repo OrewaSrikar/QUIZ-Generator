@@ -1,0 +1,30 @@
+[
+  {
+    "url": "https://en.wikipedia.org/wiki/Alan_Turing",
+    "response": {
+      "id": 1,
+      "url": "https://en.wikipedia.org/wiki/Alan_Turing",
+      "title": "Alan Turing",
+      "summary": "Alan Mathison Turing OBE FRS was a British mathematician, computer scientist, logician, cryptanalyst, philosopher, and theoretical biologist.",
+      "key_entities": {
+        "people": ["Alan Turing", "Alonzo Church", "Joan Clarke"],
+        "organizations": ["Government Code and Cypher School", "University of Manchester"],
+        "locations": ["Bletchley Park", "United Kingdom"]
+      },
+      "sections": ["Early life", "Cryptanalysis of the Enigma", "Turing machine"],
+      "quiz": [
+        {
+          "question": "What machine is Alan Turing best known for cracking?",
+          "options": ["The Lorenze Machine", "The Enigma Machine", "The Colossus", "The Bombe"],
+          "answer": "The Enigma Machine",
+          "difficulty": "medium",
+          "explanation": "Turing played a crucial role in cracking intercepted coded messages that enabled the Allies to defeat the Nazis in many crucial engagements, including the Battle of the Atlantic."
+        }
+      ],
+      "related_topics": [
+         { "topic_name": "Artificial Intelligence" },
+         { "topic_name": "Computability Theory" }
+      ]
+    }
+  }
+]

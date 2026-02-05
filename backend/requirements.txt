@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+mysql-connector-python
+psycopg2-binary
+beautifulsoup4
+google-generativeai
+python-multipart
+requests
+python-dotenv
+pydantic
