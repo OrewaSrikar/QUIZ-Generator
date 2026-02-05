@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 
 from database import engine, get_db, Base
@@ -29,10 +29,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "Quiz Generator Backend is Running"}
+
 @app.post("/generate", response_model=schemas.Quiz)
 def generate_quiz(request: schemas.QuizRequest, db: Session = Depends(get_db)):
     # 1. Check if URL already exists
-    existing_quiz = db.query(Quiz).filter(Quiz.url == request.url).first()
+    existing_quiz = db.query(Quiz).options(
+        joinedload(Quiz.questions).joinedload(Question.options),
+        joinedload(Quiz.related_topics)
+    ).filter(Quiz.url == request.url).first()
+    
     if existing_quiz:
         return existing_quiz
 
@@ -76,10 +84,6 @@ def generate_quiz(request: schemas.QuizRequest, db: Session = Depends(get_db)):
         db.refresh(db_question)
 
         for opt_text in q_data['options']:
-            # Determine label (A, B, C, D) based on index if not provided, 
-            # but simpler to just store text. Let's assign labels dynamically.
-            # actually LLM might not return labels in 'options' list, just strings.
-            # We assign them A, B, C, D order.
              # Find index
             idx = q_data['options'].index(opt_text)
             label = chr(65 + idx) # 0->A, 1->B...
@@ -100,17 +104,28 @@ def generate_quiz(request: schemas.QuizRequest, db: Session = Depends(get_db)):
         db.add(db_topic)
 
     db.commit()
+    # Eager load relationships before returning
     db.refresh(db_quiz)
     
-    return db_quiz
+    # We need to re-query with options to ensure relationships are loaded for return
+    return db.query(Quiz).options(
+        joinedload(Quiz.questions).joinedload(Question.options),
+        joinedload(Quiz.related_topics)
+    ).filter(Quiz.id == db_quiz.id).first()
 
 @app.get("/history", response_model=List[schemas.Quiz])
 def get_history(db: Session = Depends(get_db)):
-    return db.query(Quiz).all()
+    return db.query(Quiz).options(
+        joinedload(Quiz.questions).joinedload(Question.options),
+        joinedload(Quiz.related_topics)
+    ).all()
 
 @app.get("/quiz/{quiz_id}", response_model=schemas.Quiz)
 def get_quiz(quiz_id: int, db: Session = Depends(get_db)):
-    quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
+    quiz = db.query(Quiz).options(
+        joinedload(Quiz.questions).joinedload(Question.options),
+        joinedload(Quiz.related_topics)
+    ).filter(Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
     return quiz

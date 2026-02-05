@@ -5,9 +5,21 @@ import { CheckCircle, XCircle, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const QuizView = ({ quiz }) => {
-    const [showAnswers, setShowAnswers] = useState(false);
+    // State to track user's selected answer for each question
+    const [userAnswers, setUserAnswers] = useState({});
+    const [showAllAnswers, setShowAllAnswers] = useState(false);
 
     if (!quiz) return null;
+
+    const handleOptionSelect = (questionId, optionText) => {
+        // Prevent changing answer if already answered or if showing all answers
+        if (userAnswers[questionId] || showAllAnswers) return;
+
+        setUserAnswers(prev => ({
+            ...prev,
+            [questionId]: optionText
+        }));
+    };
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -64,71 +76,92 @@ export const QuizView = ({ quiz }) => {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-slate-900">Quiz Questions</h3>
-                    <Button variant="outline" onClick={() => setShowAnswers(!showAnswers)}>
-                        {showAnswers ? "Hide Answers" : "Show Answers"}
+                    <Button variant="outline" onClick={() => setShowAllAnswers(!showAllAnswers)}>
+                        {showAllAnswers ? "Hide Answers" : "Reveal All Answers"}
                     </Button>
                 </div>
 
-                {quiz.questions && quiz.questions.map((q, idx) => (
-                    <Card key={q.id || idx} className="overflow-visible">
-                        <CardHeader className="bg-slate-50/50">
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="flex gap-3">
-                                    <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">
-                                        {idx + 1}
-                                    </span>
-                                    <div>
-                                        <h4 className="font-semibold text-slate-900 text-lg leading-tight">{q.question_text}</h4>
-                                        <span className={`inline-block mt-2 text-xs px-2 py-0.5 rounded-full font-medium ${q.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                                            q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                                'bg-red-100 text-red-700'
-                                            }`}>
-                                            {q.difficulty ? q.difficulty.toUpperCase() : 'UNKNOWN'}
+                {quiz.questions && quiz.questions.map((q, idx) => {
+                    const questionId = q.id || idx;
+                    const userAnswer = userAnswers[questionId];
+                    const isAnswered = userAnswer !== undefined;
+                    // If showAllAnswers is true, we treat it as answered
+                    const showFeedback = isAnswered || showAllAnswers;
+
+                    return (
+                        <Card key={questionId} className="overflow-visible">
+                            <CardHeader className="bg-slate-50/50">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex gap-3">
+                                        <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">
+                                            {idx + 1}
                                         </span>
+                                        <div>
+                                            <h4 className="font-semibold text-slate-900 text-lg leading-tight">{q.question_text}</h4>
+                                            <span className={`inline-block mt-2 text-xs px-2 py-0.5 rounded-full font-medium ${q.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                                                q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                    'bg-red-100 text-red-700'
+                                                }`}>
+                                                {q.difficulty ? q.difficulty.toUpperCase() : 'UNKNOWN'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {q.options && q.options.map((opt, oIdx) => {
-                                    const isCorrect = opt.option_text === q.answer; // Assuming answer stores text, or we compare with stored answer
-                                    // Wait, backend stores 'answer' as text.
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {q.options && q.options.map((opt, oIdx) => {
+                                        const isCorrect = opt.option_text === q.answer;
+                                        const isSelected = userAnswer === opt.option_text;
 
-                                    return (
-                                        <div
-                                            key={oIdx}
-                                            className={`flex items-center p-3 rounded-lg border transition-all ${showAnswers && isCorrect
-                                                ? "bg-green-50 border-green-200"
-                                                : "bg-white border-slate-200 hover:border-slate-300"
-                                                }`}
-                                        >
-                                            <span className="w-6 font-medium text-slate-400 mr-3">{opt.label || String.fromCharCode(65 + oIdx)}</span>
-                                            <span className={`flex-1 ${showAnswers && isCorrect ? "font-medium text-green-800" : "text-slate-700"}`}>
-                                                {opt.option_text}
-                                            </span>
-                                            {showAnswers && isCorrect && <CheckCircle className="w-5 h-5 text-green-600" />}
+                                        let optionClass = "bg-white border-slate-200 hover:border-blue-300 cursor-pointer";
+
+                                        if (showFeedback) {
+                                            if (isCorrect) {
+                                                optionClass = "bg-green-50 border-green-500 text-green-800";
+                                            } else if (isSelected) {
+                                                optionClass = "bg-red-50 border-red-500 text-red-800";
+                                            } else {
+                                                optionClass = "bg-slate-50 border-slate-200 opacity-50";
+                                            }
+                                        }
+
+                                        return (
+                                            <div
+                                                key={oIdx}
+                                                onClick={() => handleOptionSelect(questionId, opt.option_text)}
+                                                className={`flex items-center p-3 rounded-lg border transition-all ${optionClass}`}
+                                            >
+                                                <span className={`w-6 font-medium mr-3 ${showFeedback && isCorrect ? "text-green-600" : "text-slate-400"}`}>
+                                                    {opt.label || String.fromCharCode(65 + oIdx)}
+                                                </span>
+                                                <span className="flex-1 font-medium">
+                                                    {opt.option_text}
+                                                </span>
+                                                {showFeedback && isCorrect && <CheckCircle className="w-5 h-5 text-green-600" />}
+                                                {showFeedback && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-red-600" />}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+
+                                {showFeedback && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="mt-4 p-4 bg-blue-50 rounded-lg text-sm text-blue-800 flex gap-3"
+                                    >
+                                        <HelpCircle className="w-5 h-5 flex-shrink-0 text-blue-600" />
+                                        <div>
+                                            <span className="font-bold block mb-1">Explanation:</span>
+                                            {q.explanation}
                                         </div>
-                                    )
-                                })}
-                            </div>
-
-                            {showAnswers && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    className="mt-4 p-4 bg-blue-50 rounded-lg text-sm text-blue-800 flex gap-3"
-                                >
-                                    <HelpCircle className="w-5 h-5 flex-shrink-0 text-blue-600" />
-                                    <div>
-                                        <span className="font-bold block mb-1">Explanation:</span>
-                                        {q.explanation}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </CardContent>
-                    </Card>
-                ))}
+                                    </motion.div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    );
+                })}
             </div>
         </div>
     );
