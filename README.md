@@ -67,3 +67,11 @@ A full-stack application that generates interactive quizzes from Wikipedia artic
 - `backend/`: FastAPI application, database models, scraper, LLM service.
 - `frontend/`: React application, UI components, pages.
 - `sample_data/`: Example JSON outputs.
+
+## Screenshots
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/ab4c447c-f77b-432d-a37f-91627e12fd21" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5371b621-76fb-4af9-8760-eb851f7fd7e6" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/d83f685e-f290-4661-b502-9ea5aaf16816" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/4b2bc3cb-c9c5-43b3-bd99-6b012d5fc348" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/021319a9-7688-437c-a041-73c702c1e3c1" />
+
